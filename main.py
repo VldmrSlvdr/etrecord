@@ -16,10 +16,14 @@ if __name__ == '__main__':
     time_interval = config['time_interval']
     filename_video = config['filename_video']
     timestamp = config['timestamp']
-    
+
     # Process data
     processor = DataProcessor(input_path, output_path)
     processor.process_data(filename_exp, filename_gaze, filename_position, time_interval)
 
     # Extract frames
     extract_frames(input_path, output_path, filename_video, timestamp)
+
+    # Detect Stimulus
+
+    # Integrate data for outputs

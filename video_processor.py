@@ -4,7 +4,7 @@ import cv2
 
 def extract_frames(input_path, output_path, filename_video, timestamp):
     # Create the output directory if it doesn't exist
-    output_frame_dir = output_frame_dir + '/' + timestamp
+    output_frame_dir = output_path + '/' + timestamp
 
     os.makedirs(output_frame_dir, exist_ok=True)
 
