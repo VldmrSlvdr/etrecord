@@ -1,12 +1,10 @@
 # data_reshape.py
 import pandas as pd
-import datetime
 
 class DataProcessor:
-    def __init__(self, input_path, output_path):
+    def __init__(self, input_path, output_path, timestamp):
         self.input_path = input_path
         self.output_path = output_path
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
         input_path = './inputs/'
         filename_exp = 'data_exp_03.csv'

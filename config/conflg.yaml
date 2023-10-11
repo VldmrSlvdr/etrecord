@@ -6,4 +6,3 @@ filename_gaze: 'data_gaze.csv'
 filename_position: 'merged_data.csv'
 time_interval: 5.999
 filename_video: 'video.mp4'
-timestamp: '20230913'

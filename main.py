@@ -1,10 +1,9 @@
-# main.py
+import datetime, yaml
 from data_reshape import DataProcessor
 from video_processor import extract_frames
 
 if __name__ == '__main__':
-    # You can still read configuration from config.yaml if needed
-
+    # load config files
     with open('config/config.yaml', 'r') as config_file:
         config = yaml.safe_load(config_file)
 
@@ -15,7 +14,9 @@ if __name__ == '__main__':
     filename_position = config['filename_position']
     time_interval = config['time_interval']
     filename_video = config['filename_video']
-    timestamp = config['timestamp']
+
+    # add a timestamp 
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Process data
     processor = DataProcessor(input_path, output_path)
