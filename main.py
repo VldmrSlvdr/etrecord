@@ -1,6 +1,7 @@
 import datetime, yaml
-from data_reshape import DataProcessor
-from video_processor import extract_frames
+from data_reshape import *
+from video_processor import *
+from utils import *
 
 if __name__ == '__main__':
     # load config files

@@ -13,7 +13,7 @@ def extract_frames(input_path, output_path, filename_video, timestamp):
 
     # Get the frames per second (FPS) of the video
     fps = int(cap.get(cv2.CAP_PROP_FPS))
-    print(f'video fps: {fps}')
+    # print(f'video fps: {fps}')
 
     frame_count = 0  # Initialize frame count
 
@@ -36,7 +36,7 @@ def detect_stimulus(input_path, output_path, timestamp):
     x = 1
     return x
 
-def detect_interest_areas(frame, frame_count, fps):
+def detect_interest_areas(frame, frame_count):
     hsv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
     lower_color = np.array([0, 0, 0])  # Adjust these values based on your specific color
@@ -68,4 +68,10 @@ def detect_interest_areas(frame, frame_count, fps):
         ):
             interested_rectangles_centered_and_ranged.append((frame_count, x, y, w, h))
 
-    return interested_rectangles_centered_and_ranged
+    # Sort the rectangles by width in descending order
+    sorted_rectangles = sorted(interested_rectangles_centered_and_ranged, key=lambda rect: rect[2], reverse=True)
+
+    # Keep the top 2 widest rectangles
+    top_2_widest_rectangles = sorted_rectangles[:2]
+
+    return top_2_widest_rectangles
