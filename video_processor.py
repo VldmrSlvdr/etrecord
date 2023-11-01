@@ -1,4 +1,12 @@
-# frame_extractor.py
+# -*- coding: utf-8 -*-
+"""
+-------------------------------------------------
+   @File Name:     video_processor.py
+   @Author:        Yifei LI
+   @Date:          2023/11/01
+   @Description:
+-------------------------------------------------
+"""
 import os, cv2
 import numpy as np
 

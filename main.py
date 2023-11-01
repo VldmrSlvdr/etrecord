@@ -7,13 +7,14 @@
    @Description:
 -------------------------------------------------
 """
-import datetime, yaml
-from data_reshape import *
+import yaml, os
+from data_processor import *
 from video_processor import *
+from visualizer import *
 from utils import *
 
-def main():
-    def __init__(self):
+def main(config):
+    def __init__(self, input_dir, output_dir):
         # load config files
         with open('config/config.yaml', 'r') as config_file:
             config = yaml.safe_load(config_file)
@@ -40,4 +41,7 @@ def main():
     # integrate the results and convert it into 
 
 if __name__ == '__main__':
-    main()
+    with open('config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+
+    main(config)
