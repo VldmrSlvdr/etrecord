@@ -15,8 +15,9 @@ class DataProcessor:
         filename_position = f'position_{timestamp}.csv'
         output_frame_dir = './outputs/frames/'
 
-        data_exp = pd.read_csv(input_path + filename_exp)
-        data_gaze = pd.read_csv(input_path + filename_gaze)
+    def process_data(self):
+        data_exp = pd.read_csv(self.input_path + self.filename_exp)
+        data_gaze = pd.read_csv(self.input_path + self.filename_gaze)
 
         exp_timestamp = data_exp['etRecord_3.started']
         exp_timestamp_clean = exp_timestamp.dropna()
@@ -46,7 +47,7 @@ class DataProcessor:
             tolerance=time_interval
         )
 
-        merged_df.to_csv(output_path+filename_position) 
+        merged_df.to_csv(self.output_path+self.filename_position) 
 
 
 def extract_exposure_data(input_df):
