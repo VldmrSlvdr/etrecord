@@ -37,8 +37,8 @@ def main(config):
     # process video and return the results of stimulus delection
     video_processer.detect_interest_areas()
 
-
-    # integrate the results and convert it into 
+    # integrate the results and convert it into csv outputs
+    
 
 if __name__ == '__main__':
     with open('config.yaml', 'r') as f:
