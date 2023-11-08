@@ -10,23 +10,27 @@
 import pandas as pd
 
 class DataProcessor:
-    def __init__(self, input_path, output_path, timestamp):
-        self.input_path = input_path
-        self.output_path = output_path
-
-        input_path = './inputs/'
-        filename_exp = 'data_exp_03.csv'
-        filename_gaze = 'data_gaze_03.csv'
-        filename_video = '20230913_02.mp4'
-
-        output_path = './outputs/'
-        filename_position = f'position_{timestamp}.csv'
-        output_frame_dir = './outputs/frames/'
+    def __init__(self, config):
+        """
+        Initialize the DataProcessor with file paths and filenames from the given configuration.
+        """
+        self.input_path = config['input_path']
+        self.output_path = config['output_path']
+        self.filename_exp = config['filename_exp']
+        self.filename_gaze = config['filename_gaze']
+        self.filename_position = config['filename_position']
 
     def process_data(self):
-        data_exp = pd.read_csv(self.input_path + self.filename_exp)
-        data_gaze = pd.read_csv(self.input_path + self.filename_gaze)
-
+        """
+        Process experimental and gaze data and merge them based on timestamps.
+        """
+        try:
+            data_exp = pd.read_csv(self.input_path + self.filename_exp)
+            data_gaze = pd.read_csv(self.input_path + self.filename_gaze)
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            return
+        
         exp_timestamp = data_exp['etRecord_3.started']
         exp_timestamp_clean = exp_timestamp.dropna()
 
@@ -55,10 +59,18 @@ class DataProcessor:
             tolerance=time_interval
         )
 
-        merged_df.to_csv(self.output_path+self.filename_position) 
+        try:
+            merged_df.to_csv(self.output_path + self.filename_position)
+        except Exception as e:
+            print(f"Error while saving the file: {e}")
 
-    def extract_exposure_data(input_df):
-        condition = input_df['condition'][3]
+    def select_columns(self):
+        """
+        Select and return specified columns from the input DataFrame.
+        """
+        data_exp = pd.read_csv(self.input_path + self.filename_exp)
+        data_exp_exposure = data_exp[2:22]
+        condition = data_exp['condition'][3]
 
         if condition == 1:
             columns = ['participant', 'condition', 'session', 'picture1', 'picture2', 'statement1', 'statement2', 'Category', 'etRecord_3.started', 'arrow_list1']
@@ -72,17 +84,23 @@ class DataProcessor:
             return None  # Handle invalid condition
 
         # Extract and return the selected columns
-        return input_df[columns]
+        return data_exp_exposure[columns]
 
-    def extract_rating_data(input_df):
+    def extract_rating_data(self):
+        """
+        Extract and reformat the rating data from the input DataFrame.
+        """
         # Create an empty list to store the rows
+        data_exp = pd.read_csv(self.input_path + self.filename_exp)
+        session = data_exp['session'][3]
+        data_exp_rating = data_exp[23:63]
         output = []
 
         # Iterate through the rows of the input DataFrame
-        for index, row in input_df.iterrows():
+        for index, row in data_exp_rating.iterrows():
             # Extract fixed columns
             participant = row['participant']
-            session = row['session']
+            # session = row['session']
             evaluation = row['evaluation']
             Category = row['Category']
             set_num = row['set_num']
@@ -123,3 +141,27 @@ class DataProcessor:
         output_target = pd.DataFrame(output)
 
         return output_target
+
+    def load_gaze_data(self):
+        """
+        Load and preprocess gaze data from the CSV file.
+        """
+        try:
+            gaze_data = pd.read_csv(self.input_path + self.filename_gaze)
+            # Add preprocessing steps here...
+            return gaze_data
+        except Exception as e:
+            print(f"Error loading gaze data: {e}")
+            return None
+
+    def load_exp_data(self):
+        """
+        Load and preprocess experimental data from the CSV file.
+        """
+        try:
+            exp_data = pd.read_csv(self.input_path + self.filename_exp)
+            # Add preprocessing steps here...
+            return exp_data
+        except Exception as e:
+            print(f"Error loading experimental data: {e}")
+            return None

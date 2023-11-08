@@ -1,8 +1,8 @@
 # config/config.yaml
-input_path: 'input_directory/'
-output_path: 'output_directory/'
-filename_exp: 'data_exp.csv'
-filename_gaze: 'data_gaze.csv'
-filename_position: 'merged_data.csv'
+input_path: 'inputs/test/'
+output_path: 'outputs/test/'
+filename_exp: 'data_exp_03.csv'
+filename_gaze: 'data_gaze_03.csv'
+filename_position: 'merged_data_03.csv'
 time_interval: 5.999
 filename_video: '20230913_02.mp4'
