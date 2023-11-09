@@ -58,7 +58,7 @@ class VideoProcessor:
 
         return frames_and_areas
 
-    def detect_stimulus(self, timestamp):
+    def detect_stimulus(self):
         """
         Detect a stimulus in a video and return relevant information.
         """
@@ -66,49 +66,48 @@ class VideoProcessor:
         return None
 
     def detect_interest_areas(self, frame, frame_count):
-        """
-        Analyze a video frame to detect areas of interest based on color thresholds and geometric criteria.
-        """
-        try:
-            hsv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            """
+            Analyze a video frame to detect areas of interest based on color thresholds and geometric criteria.
+            Returns a list of normalized interest areas (x, y, width, height) as ratios of the frame size.
+            """
+            try:
+                hsv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-            lower_color = np.array([0, 0, 0])  # Adjust these values based on your specific color
-            upper_color = np.array([180, 180, 180])  # Adjust these values based on your specific color
+                # Define your color range for detection
+                lower_color = np.array([0, 0, 0])  # Example: Change to your specifics
+                upper_color = np.array([180, 180, 180])  # Example: Change to your specifics
 
-            color_mask = cv2.inRange(hsv_image, lower_color, upper_color)
-            less_interested_mask = cv2.bitwise_not(color_mask)
+                # Detect areas of interest
+                color_mask = cv2.inRange(hsv_image, lower_color, upper_color)
+                less_interested_mask = cv2.bitwise_not(color_mask)
+                contours, _ = cv2.findContours(less_interested_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            contours, _ = cv2.findContours(less_interested_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                interested_rectangles_centered_and_ranged = []
+                image_center_x = frame.shape[1] / 2
+                image_center_y = frame.shape[0] / 2
+                center_threshold = 0.4 * min(frame.shape[1], frame.shape[0])
+                y_range_min = 0.2 * frame.shape[0]
+                y_range_max = 0.8 * frame.shape[0]
 
-            interested_rectangles_centered_and_ranged = []
-            image_center_x = frame.shape[1] // 2
-            image_center_y = frame.shape[0] // 2
-            center_threshold = 0.4
-            y_range_min = 0.2
-            y_range_max = 0.8
+                for contour in contours:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    rect_center_x = x + w / 2
+                    rect_center_y = y + h / 2
+                    distance_to_center = np.sqrt((rect_center_x - image_center_x) ** 2 + (rect_center_y - image_center_y) ** 2)
 
-            for contour in contours:
-                x, y, w, h = cv2.boundingRect(contour)
+                    if distance_to_center <= center_threshold and y + h >= y_range_min and y + h <= y_range_max:
+                        # Normalize the coordinates
+                        normalized_x = x / frame.shape[1]
+                        normalized_y = y / frame.shape[0]
+                        normalized_w = w / frame.shape[1]
+                        normalized_h = h / frame.shape[0]
+                        interested_rectangles_centered_and_ranged.append((frame_count, normalized_x, normalized_y, normalized_w, normalized_h))
 
-                rect_center_x = x + w // 2
-                rect_center_y = y + h // 2
+                # Sort the rectangles by width in descending order and keep the top 2
+                top_2_widest_rectangles = sorted(interested_rectangles_centered_and_ranged, key=lambda rect: rect[3], reverse=True)[:2]
 
-                distance_to_center = np.sqrt((rect_center_x - image_center_x) ** 2 + (rect_center_y - image_center_y) ** 2)
+                return top_2_widest_rectangles
 
-                if (
-                    distance_to_center <= center_threshold * min(frame.shape[0], frame.shape[1]) and
-                    y_range_min <= (y + h) / frame.shape[0] <= y_range_max
-                ):
-                    interested_rectangles_centered_and_ranged.append((frame_count, x, y, w, h))
-
-            # Sort the rectangles by width in descending order
-            sorted_rectangles = sorted(interested_rectangles_centered_and_ranged, key=lambda rect: rect[2], reverse=True)
-
-            # Keep the top 2 widest rectangles
-            top_2_widest_rectangles = sorted_rectangles[:2]
-
-            return top_2_widest_rectangles
-        
-        except Exception as e:
-            print(f"Error while detecting interest areas: {e}")
-            return []
+            except Exception as e:
+                print(f"Error while detecting interest areas: {e}")
+                return []

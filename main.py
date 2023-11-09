@@ -29,10 +29,10 @@ class ExperimentProcessor:
 
     def process(self):
         # Process data using DataProcessor
-        self.data_processor.process_data()
-        interest_areas = self.video_processor.process_video_and_detect_areas()
-        AOI = pd.DataFrame(interest_areas)
-        AOI.to_csv(self.output_path + 'AOI.csv')
+        # self.data_processor.process_data()
+        # interest_areas = self.video_processor.process_video_and_detect_areas()
+        # AOI = pd.DataFrame(interest_areas)
+        # AOI.to_csv(self.output_path + 'AOI.csv')
 
         # exposure = self.data_processor.select_columns()
         # rating = self.data_processor.extract_rating_data()
@@ -40,7 +40,7 @@ class ExperimentProcessor:
         
         # Placeholder for video processing (uncomment if VideoProcessor is implemented)
         # self.video_processor.detect_interest_areas()
-        self.data_integrator.integrate_data()
+        self.data_integrator.filter_data()
 
         # Placeholder for integrating results and converting to CSV
         # self.save_results()
