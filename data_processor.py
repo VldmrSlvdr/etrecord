@@ -68,9 +68,9 @@ class DataProcessor:
         """
         Select and return specified columns from the input DataFrame.
         """
-        data_exp = pd.read_csv(self.input_path + self.filename_exp)
+        data_exp = pd.read_csv(self.input_path + self.filename_exp, sep=',')
         data_exp_exposure = data_exp[2:22]
-        condition = data_exp['condition'][3]
+        condition = data_exp['condition'].iloc[3]
 
         if condition == 1:
             columns = ['participant', 'condition', 'session', 'picture1', 'picture2', 'statement1', 'statement2', 'Category', 'etRecord_3.started', 'arrow_list1']
@@ -82,21 +82,48 @@ class DataProcessor:
             columns = ['participant', 'condition', 'session', 'picture2', 'picture3', 'statement2', 'statement3', 'Category', 'etRecord_3.started', 'arrow_list1']
         else:
             return None  # Handle invalid condition
+        
+        # Create a copy of the DataFrame
+        df = data_exp_exposure[columns].copy()
+        df['target_image'] = ''
+        df['target_statement'] = ''
+ 
+        target_mapping = {
+            (1, 0): ('picture1', 'statement1'),
+            (1, 1): ('picture2', 'statement2'),
+            (2, 0): ('picture4', 'statement4'),
+            (2, 1): ('picture1', 'statement1'),
+            (3, 0): ('picture3', 'statement3'),
+            (3, 1): ('picture4', 'statement4'),
+            (4, 0): ('picture2', 'statement2'),
+            (4, 1): ('picture3', 'statement3'),
+        }
 
-        # Extract and return the selected columns
-        return data_exp_exposure[columns]
+        for index, row in df.iterrows():
+            condition = int(row['condition'])  # Convert to int
+            arrow_list1 = int(row['arrow_list1'])  # Convert to int
+
+            target_cols = target_mapping.get((condition, arrow_list1))
+
+            if target_cols:
+                df.at[index, 'target_image'] = row[target_cols[0]]
+                df.at[index, 'target_statement'] = row[target_cols[1]]
+        
+        df = df[['participant', 'condition', 'session', 'target_image', 'target_statement', 'Category', 'etRecord_3.started']]
+
+        return df
 
     def extract_rating_data(self):
         """
         Extract and reformat the rating data from the input DataFrame.
         """
         # Create an empty list to store the rows
-        data_exp = pd.read_csv(self.input_path + self.filename_exp)
-        session = data_exp['session'][3]
-        if session == 1:
+        data_exp = pd.read_csv(self.input_path + self.filename_exp, sep=',')
+        session = data_exp['session']
+        if (session == 1).any():
             pass
         else:
-            data_exp_rating = data_exp[23:64]
+            data_exp_rating = data_exp[24:64]
             output = []
 
             # Iterate through the rows of the input DataFrame
