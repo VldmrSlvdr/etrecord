@@ -51,6 +51,16 @@ class VideoProcessor:
                 }
                 frames_and_areas.append(frame_data)
 
+                # Calculate the third area
+                third_area = self.infer_third_area(frame_count, 
+                    interest_areas[0] if len(interest_areas) > 0 else None,
+                    interest_areas[1] if len(interest_areas) > 1 else None
+                )
+
+                # Include the third area in the frame data
+                frame_data['interest_area_3'] = third_area
+                frames_and_areas.append(frame_data)
+    
             frame_count += 1
 
         # Release the video capture
@@ -111,3 +121,29 @@ class VideoProcessor:
             except Exception as e:
                 print(f"Error while detecting interest areas: {e}")
                 return []
+        
+    def infer_third_area(self, frame_count, area1, area2):
+        """
+        Infers the coordinates of a third interest area based on the first two detected areas.
+        The third area lies below areas 1 and 2, its height is 20% of the mean height of the first two areas,
+        and its width is 1.5 times the total width of the first two areas.
+        """
+        if area1 is None or area2 is None:
+            return None
+
+        _, x1, y1, w1, h1 = area1
+        _, x2, y2, w2, h2 = area2
+
+        # Calculate the mean height of areas 1 and 2
+        mean_height = (h1 + h2) / 2
+
+        # Calculate the total width of areas 1 and 2
+        total_width = w1 + w2
+
+        # Calculate the position and size of the third area
+        x3 = min(x1, x2) - 0.1
+        y3 = max(y1 + h1, y2 + h2)  # Position it below the lower of the two areas
+        w3 = 1.5 * total_width
+        h3 = 0.2 * mean_height
+
+        return (frame_count, x3, y3, w3, h3)
