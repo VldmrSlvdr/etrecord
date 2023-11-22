@@ -93,54 +93,57 @@ class DataProcessor:
         # Create an empty list to store the rows
         data_exp = pd.read_csv(self.input_path + self.filename_exp)
         session = data_exp['session'][3]
-        data_exp_rating = data_exp[23:63]
-        output = []
+        if session == 1:
+            pass
+        else:
+            data_exp_rating = data_exp[23:64]
+            output = []
 
-        # Iterate through the rows of the input DataFrame
-        for index, row in data_exp_rating.iterrows():
-            # Extract fixed columns
-            participant = row['participant']
-            # session = row['session']
-            evaluation = row['evaluation']
-            Category = row['Category']
-            set_num = row['set_num']
+            # Iterate through the rows of the input DataFrame
+            for index, row in data_exp_rating.iterrows():
+                # Extract fixed columns
+                participant = row['participant']
+                # session = row['session']
+                evaluation = row['evaluation']
+                Category = row['Category']
+                set_num = row['set_num']
 
-            # Determine target_image and target_statement based on set_num
-            if set_num == 1:
-                target_image = row['picture1']
-                target_statement = row['statement1']
-            elif set_num == 2:
-                target_image = row['picture2']
-                target_statement = row['statement2']
-            elif set_num == 3:
-                target_image = row['picture3']
-                target_statement = row['statement3']
-            elif set_num == 4:
-                target_image = row['picture4']
-                target_statement = row['statement4']
-            else:
-                # Handle the case when set_num is not 1, 2, or 3
-                target_image = None
-                target_statement = None
+                # Determine target_image and target_statement based on set_num
+                if set_num == 1:
+                    target_image = row['picture1']
+                    target_statement = row['statement1']
+                elif set_num == 2:
+                    target_image = row['picture2']
+                    target_statement = row['statement2']
+                elif set_num == 3:
+                    target_image = row['picture3']
+                    target_statement = row['statement3']
+                elif set_num == 4:
+                    target_image = row['picture4']
+                    target_statement = row['statement4']
+                else:
+                    # Handle the case when set_num is not 1, 2, or 3
+                    target_image = None
+                    target_statement = None
 
-            # Create a dictionary for the row
-            row_dict = {
-                'participant': participant,
-                'session': session,
-                'Category': Category,
-                'set_num': set_num,
-                'target_image': target_image,
-                'target_statement': target_statement,
-                'evaluation': evaluation,
-            }
+                # Create a dictionary for the row
+                row_dict = {
+                    'participant': participant,
+                    'session': session,
+                    'Category': Category,
+                    'set_num': set_num,
+                    'target_image': target_image,
+                    'target_statement': target_statement,
+                    'evaluation': evaluation,
+                }
 
-            # Append the row dictionary to the list
-            output.append(row_dict)
+                # Append the row dictionary to the list
+                output.append(row_dict)
 
-        # Create a DataFrame from the list of row dictionaries
-        output_target = pd.DataFrame(output)
+            # Create a DataFrame from the list of row dictionaries
+            output_target = pd.DataFrame(output)
 
-        return output_target
+            return output_target
 
     def load_gaze_data(self):
         """
