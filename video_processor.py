@@ -68,13 +68,6 @@ class VideoProcessor:
 
         return frames_and_areas
 
-    def detect_stimulus(self):
-        """
-        Detect a stimulus in a video and return relevant information.
-        """
-        # Placeholder function body
-        return None
-
     def detect_interest_areas(self, frame, frame_count):
             """
             Analyze a video frame to detect areas of interest based on color thresholds and geometric criteria.
