@@ -16,14 +16,12 @@ class DataIntegrator:
         self.output_path = config['output_path']
         self.filename_gaze = config['filename_gaze']
         self.filename_exp = config['filename_exp']
-        self.ioa_df = pd.read_csv(self.output_path + 'AOI.csv')
-        self.merged_data_df = pd.read_csv(self.output_path + 'merged_data_03.csv')
 
-    def integrate_data(self):
+    def integrate_data(self, exposure, aoi):
         # Merge the dataframes
         aligned_df = pd.merge_asof(
-            self.merged_data_df.sort_values('gaze_stamp'),
-            self.ioa_df.sort_values('elapsed_time'),
+            exposure.sort_values('gaze_stamp'),
+            aoi.sort_values('elapsed_time'),
             left_on='gaze_stamp', right_on='elapsed_time', direction='nearest'
         )
 
@@ -42,6 +40,8 @@ class DataIntegrator:
             aligned_df.at[idx, 'position_2'] = position_2
             aligned_df.at[idx, 'position_3'] = position_3
 
+        return aligned_df
+    '''
         # Now you can save the aligned DataFrame to a new CSV
         aligned_df.to_csv(self.output_path + 'aligned_data.csv', index=False)
 
@@ -50,6 +50,7 @@ class DataIntegrator:
                                     (aligned_df['elapsed_time'] % 6 < 5)]
         
         filtered_df.to_csv(self.output_path + 'aligned_filtered_data.csv', index=False)
+    '''
 
     def is_gaze_in_ioa(self, norm_x, norm_y, area_str, is_area_3=False):
         area = self.parse_area(area_str)
@@ -65,7 +66,6 @@ class DataIntegrator:
                 return True, aoi_position
         return False, None
 
-    
     def parse_area(self, area_str):
         try:
             return ast.literal_eval(area_str)

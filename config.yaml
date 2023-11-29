@@ -1,5 +1,5 @@
 # config/config.yaml
-input_dir: 'inputs/test_dir/'
+input_dir: 'inputs/test_dir2/'
 input_path: 'inputs/test/'
 output_path: 'outputs/'
 filename_exp: 'data_exp_03.csv'

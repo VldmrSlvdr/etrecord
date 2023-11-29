@@ -1,4 +1,10 @@
+# ignore all inputs folders
 inputs/
+# ignore all outputs folders
 outputs/
+# ignore pycache folders
 __pycache__/
+# ignore all .ipynb files
 *.ipynb
+# ignore all .pyc files
+*.pyc
