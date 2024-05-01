@@ -16,9 +16,9 @@ class VideoProcessor:
         """
         Initialize the VideoProcessor with file paths and filenames from the given configuration.
         """
-        self.input_path = config['input_path']
+        self.input_path = config['base_path']
         self.output_path = config['output_path']
-        self.filename_video = config['filename_video']
+        self.filename_video = config['video_file']
 
     def process_video_and_detect_areas(self):
         # Open the video file

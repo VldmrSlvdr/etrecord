@@ -14,11 +14,11 @@ class DataProcessor:
         """
         Initialize the DataProcessor with file paths and filenames from the given configuration.
         """
-        self.input_path = config['input_path']
+        self.input_path = config['base_path']
         self.output_path = config['output_path']
-        self.filename_exp = config['filename_exp']
-        self.filename_gaze = config['filename_gaze']
-        self.filename_position = config['filename_position']
+        self.filename_exp = config['exp_file']
+        self.filename_gaze = config['gaze_file']
+        self.filename_position = config['position_file']
 
     def process_data(self):
         """

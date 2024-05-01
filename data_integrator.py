@@ -12,10 +12,10 @@ import pandas as pd
 
 class DataIntegrator:
     def __init__(self, config):
-        self.input_path = config['input_path']
+        self.input_path = config['base_path']
         self.output_path = config['output_path']
-        self.filename_gaze = config['filename_gaze']
-        self.filename_exp = config['filename_exp']
+        self.filename_gaze = config['gaze_file']
+        self.filename_exp = config['exp_file']
 
     def integrate_data(self, exposure, aoi):
         # Merge the dataframes

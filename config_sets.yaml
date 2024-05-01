@@ -1,0 +1,29 @@
+participants:
+  - participant_id: '592567'
+    base_path: 'inputs/test_dir2/20231011/01_592567/'
+    output_path: 'outputs/592567/'
+    sessions:
+      - id: '001'
+        exp_file: '592567_eye20_2023-10-11_09h19.49.520.csv'
+        gaze_file: '000/exports/000/gaze_positions.csv'
+        position_file: 'merged_data_01.csv'
+        video_file: '000/world.mp4'
+      - id: '002'
+        exp_file: '592567_eye20_2023-10-11_09h23.19.744.csv'
+        gaze_file: '001/exports/001/gaze_positions.csv'
+        position_file: 'merged_data_02.csv'
+        video_file: '001/world.mp4'
+
+  - participant_id: '245871'
+    base_path: 'inputs/test_dir2/20231011/02_245871/'
+    output_path: 'outputs/245871/'
+    sessions:
+      - id: '001'
+        exp_file: '245871_eye20_2023-10-11_10h17.30.553.csv'
+        gaze_file: '000/exports/000/gaze_positions.csv'
+        video_file: '000/world.mp4'
+      - id: '002'
+        exp_file: '245871_eye20_2023-10-11_10h21.19.193.csv'
+        gaze_file: '001/exports/001/gaze_positions.csv'
+        video_file: '001/world.mp4'
+      
