@@ -53,8 +53,30 @@ class ExperimentProcessor:
         gaze_data = data_processor.process_data()
         video_data = video_processor.process_video_and_detect_areas()
 
+            # Ensure gaze_data is a DataFrame
+        if isinstance(gaze_data, list):  # Check if the data is a list and convert if necessary
+            gaze_data = pd.DataFrame(gaze_data)
+        elif gaze_data is None:
+            print("Gaze data is None, skipping sorting and further processing for gaze data.")
+        else:
+            # Ensure the gaze_data is sorted if it's already a DataFrame
+            gaze_data = gaze_data.sort_values('gaze_stamp') if 'gaze_stamp' in gaze_data.columns else gaze_data
+
+        video_data = video_processor.process_video_and_detect_areas()
+        
+        # Ensure video_data is a DataFrame
+        if isinstance(video_data, list):  # Check if the data is a list and convert if necessary
+            video_data = pd.DataFrame(video_data)
+        elif video_data is None:
+            print("Video data is None, skipping further processing for video data.")
+        else:
+            # Add any specific handling for video_data if it's already a DataFrame
+            pass
+
         if exp_data is not None:
             exp_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_exp.csv"), index=False)
+        if gaze_data is not None:
+            gaze_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_gaze.csv"), index=False)
         if video_data is not None:
             pd.DataFrame(video_data).to_csv(os.path.join(session_config['output_path'], f"{session['id']}_video_analysis.csv"), index=False)
         return exp_data, gaze_data, video_data

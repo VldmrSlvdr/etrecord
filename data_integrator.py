@@ -53,9 +53,12 @@ class DataIntegrator:
     '''
 
     def is_gaze_in_ioa(self, norm_x, norm_y, area_str, is_area_3=False):
+        norm_x = float(norm_x)
+        norm_y = float(norm_y)
+
         area = self.parse_area(area_str)
         if area:
-            _, x, y, w, h = area
+            _, x, y, w, h = map(float, area)
             if x <= norm_x <= x + w and y <= norm_y <= y + h:
                 if is_area_3:
                     # For area 3, check if gaze is in the left or right 50% of the area

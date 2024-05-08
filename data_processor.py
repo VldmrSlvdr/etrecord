@@ -18,7 +18,6 @@ class DataProcessor:
         self.output_path = config['output_path']
         self.filename_exp = config['exp_file']
         self.filename_gaze = config['gaze_file']
-        self.filename_position = config['position_file']
 
     def process_data(self):
         """
@@ -58,11 +57,6 @@ class DataProcessor:
             direction='backward',  # Use 'backward' if you want to find the nearest exp_index value before gaze_stamp
             tolerance=time_interval
         )
-
-        try:
-            merged_df.to_csv(self.output_path + self.filename_position)
-        except Exception as e:
-            print(f"Error while saving the file: {e}")
         
         return merged_df
 
