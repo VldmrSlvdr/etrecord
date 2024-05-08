@@ -21,9 +21,11 @@ participants:
       - id: '001'
         exp_file: '245871_eye20_2023-10-11_10h17.30.553.csv'
         gaze_file: '000/exports/000/gaze_positions.csv'
+        position_file: 'merged_data_01.csv'
         video_file: '000/world.mp4'
       - id: '002'
         exp_file: '245871_eye20_2023-10-11_10h21.19.193.csv'
         gaze_file: '001/exports/001/gaze_positions.csv'
+        position_file: 'merged_data_02.csv'
         video_file: '001/world.mp4'
       

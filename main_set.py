@@ -71,10 +71,11 @@ class ExperimentProcessor:
             
             # Integrate the multiple data files 
             data_integrator = DataIntegrator(session_config) 
-            integ_data = data_integrator.integrate_data()
-            if integ_data is not None:
-                integ_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_integ.csv"), index=False)
-                combined_integ_data.append(integ_data)
+            if gaze_data is not None and video_data is not None:
+                integ_data = data_integrator.integrate_data(gaze_data, video_data)
+                if integ_data is not None:
+                    integ_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_integ.csv"), index=False)
+                    combined_integ_data.append(integ_data)
 
         # After processing all sessions, combine and save experimental and gaze data
         if combined_exp_data:

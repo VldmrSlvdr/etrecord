@@ -63,6 +63,8 @@ class DataProcessor:
             merged_df.to_csv(self.output_path + self.filename_position)
         except Exception as e:
             print(f"Error while saving the file: {e}")
+        
+        return merged_df
 
     def select_columns(self):
         """

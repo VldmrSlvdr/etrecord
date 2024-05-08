@@ -17,10 +17,10 @@ class DataIntegrator:
         self.filename_gaze = config['gaze_file']
         self.filename_exp = config['exp_file']
 
-    def integrate_data(self, exposure, aoi):
+    def integrate_data(self, gaze, aoi):
         # Merge the dataframes
         aligned_df = pd.merge_asof(
-            exposure.sort_values('gaze_stamp'),
+            gaze.sort_values('gaze_stamp'),
             aoi.sort_values('elapsed_time'),
             left_on='gaze_stamp', right_on='elapsed_time', direction='nearest'
         )
