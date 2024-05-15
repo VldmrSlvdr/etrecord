@@ -38,11 +38,19 @@ class ExperimentProcessor:
         self.save_combined_data(participant['output_path'], participant['participant_id'], 
                                 combined_exp_data, combined_gaze_data, combined_rating_data, combined_integ_data)
 
+    def ensure_directory_exists(directory):
+        """Ensure the directory exists, and if not, create it."""
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+
     def process_session(self, participant, session):
+
         session_config = self.build_session_config(participant, session)
         data_processor = DataProcessor(session_config)
         video_processor = VideoProcessor(session_config)
         data_integrator = DataIntegrator(session_config)
+        if not os.path.exists(session_config['output_path']):
+            os.makedirs(session_config['output_path'], exist_ok=True)
 
         exp_data, gaze_data, video_data = self.handle_data_processing(data_processor, video_processor, session_config, session)
         if gaze_data is not None and video_data is not None:
@@ -87,6 +95,9 @@ class ExperimentProcessor:
             integ_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_integ.csv"), index=False)
 
     def save_combined_data(self, output_path, participant_id, exp_data, gaze_data, rating_data, integ_data):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path, exist_ok=True)
+
         if exp_data:
             pd.concat(exp_data, ignore_index=True).to_csv(os.path.join(output_path, f"{participant_id}_combined_exp_data.csv"), index=False)
         if gaze_data:
@@ -102,8 +113,7 @@ class ExperimentProcessor:
             'output_path': participant['output_path'],
             'exp_file': session['exp_file'],
             'gaze_file': session['gaze_file'],
-            'video_file': session['video_file'],
-            'position_file': session['position_file']
+            'video_file': session['video_file']
         }
 
 def main():
