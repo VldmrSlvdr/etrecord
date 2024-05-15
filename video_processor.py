@@ -134,7 +134,7 @@ class VideoProcessor:
         total_width = w1 + w2
 
         # Calculate the position and size of the third area
-        x3 = min(x1, x2) - 0.1
+        x3 = min(x1, x2)
         y3 = max(y1 + h1, y2 + h2)  # Position it below the lower of the two areas
         w3 = 1.5 * total_width
         h3 = 0.2 * mean_height
