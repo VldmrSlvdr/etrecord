@@ -8,3 +8,7 @@ __pycache__/
 *.ipynb
 # ignore all .pyc files
 *.pyc
+# ignore jupyter_note 
+jupyter_note/
+# ignore config_all.yaml
+config_all.yaml

@@ -1,252 +1,127 @@
 # -*- coding: utf-8 -*-
 """
 -------------------------------------------------
-   @File Name:     main.py
+   @File Name:     main_set.py
    @Author:        Yifei LI
-   @Date:          2023/11/01
+   @Date:          2024/05/01
    @Description:
 -------------------------------------------------
 """
 import os
-import yaml
 import pandas as pd
-import argparse
+import logging
+from app.data_processor import DataProcessor
+from app.video_processor import VideoProcessor
+from app.data_integrator import DataIntegrator
 
-from data_processor import DataProcessor
-from video_processor import VideoProcessor
-from data_integrator import DataIntegrator
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# from video_processor import VideoProcessor
 class ExperimentProcessor:
     def __init__(self, config):
-        self.input_path = config["input_path"]
-        self.output_path = config["output_path"]
-        self.filename_exp = config["filename_exp"]
-        self.filename_gaze = config["filename_gaze"]
-        self.filename_position = config["filename_position"]
-        self.filename_video = config["filename_video"]
-        self.data_processor = DataProcessor(config)
-        self.video_processor = VideoProcessor(config)
-        self.data_integrator = DataIntegrator(config)
+        self.config = config
 
-    # def process(self):
-        # Process data using DataProcessor
-        # self.data_processor.process_data()
-        # interest_areas = self.video_processor.process_video_and_detect_areas()
-        # AOI = pd.DataFrame(interest_areas)
-        # AOI.to_csv(self.output_path + 'AOI.csv')
+    def process_all_participants(self):
+        for participant in self.config['participants']:
+            self.process_participant(participant)
 
-        # exposure = self.data_processor.select_columns()
-        # rating = self.data_processor.extract_rating_data()
+    def process_participant(self, participant):
+        logging.info(f"Processing participant {participant['participant_id']}")
+        combined_exp_data, combined_gaze_data, combined_rating_data, combined_integ_data = [], [], [], []
 
+        for session in participant['sessions']:
+            try:
+                self.process_session(participant, session)
+            except Exception as e:
+                logging.error(f"Error processing session {session['id']} for participant {participant['participant_id']}: {e}")
+                continue
+
+        self.save_combined_data(participant['output_path'], participant['participant_id'], 
+                                combined_exp_data, combined_gaze_data, combined_rating_data, combined_integ_data)
+
+    def ensure_directory_exists(directory):
+        """Ensure the directory exists, and if not, create it."""
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+
+    def process_session(self, participant, session):
+
+        session_config = self.build_session_config(participant, session)
+        data_processor = DataProcessor(session_config)
+        video_processor = VideoProcessor(session_config)
+        data_integrator = DataIntegrator(session_config)
+        if not os.path.exists(session_config['output_path']):
+            os.makedirs(session_config['output_path'], exist_ok=True)
+
+        exp_data, gaze_data, video_data = self.handle_data_processing(data_processor, video_processor, session_config, session)
+        if gaze_data is not None and video_data is not None:
+            self.integrate_and_save_data(gaze_data, video_data, data_integrator, session_config, session)
+
+    def handle_data_processing(self, data_processor, video_processor,session_config, session):
+        exp_data = data_processor.select_columns()
+        gaze_data = data_processor.process_data()
+        video_data = video_processor.process_video_and_detect_areas()
+
+            # Ensure gaze_data is a DataFrame
+        if isinstance(gaze_data, list):  # Check if the data is a list and convert if necessary
+            gaze_data = pd.DataFrame(gaze_data)
+        elif gaze_data is None:
+            print("Gaze data is None, skipping sorting and further processing for gaze data.")
+        else:
+            # Ensure the gaze_data is sorted if it's already a DataFrame
+            gaze_data = gaze_data.sort_values('gaze_stamp') if 'gaze_stamp' in gaze_data.columns else gaze_data
+
+        video_data = video_processor.process_video_and_detect_areas()
         
-        # Placeholder for video processing (uncomment if VideoProcessor is implemented)
-        # self.video_processor.detect_interest_areas()
+        # Ensure video_data is a DataFrame
+        if isinstance(video_data, list):  # Check if the data is a list and convert if necessary
+            video_data = pd.DataFrame(video_data)
+        elif video_data is None:
+            print("Video data is None, skipping further processing for video data.")
+        else:
+            # Add any specific handling for video_data if it's already a DataFrame
+            pass
 
-        # Placeholder for integrating results and converting to CSV
-        # self.data_integrator.integrate_data()
-        # self.save_results()
+        if exp_data is not None:
+            exp_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_exp.csv"), index=False)
+        if gaze_data is not None:
+            gaze_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_gaze.csv"), index=False)
+        if video_data is not None:
+            pd.DataFrame(video_data).to_csv(os.path.join(session_config['output_path'], f"{session['id']}_video_analysis.csv"), index=False)
+        return exp_data, gaze_data, video_data
 
-    def save_results(self):
+    def integrate_and_save_data(self, gaze_data, video_data, data_integrator, session_config, session):
+        integ_data = data_integrator.integrate_data(gaze_data, video_data)
+        if integ_data is not None:
+            integ_data.to_csv(os.path.join(session_config['output_path'], f"{session['id']}_integ.csv"), index=False)
 
-        # exposure.to_csv(self.output_path + 'exposure.csv')
-        # rating.to_csv(self.output_path + 'rating.csv')
+    def save_combined_data(self, output_path, participant_id, exp_data, gaze_data, rating_data, integ_data):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path, exist_ok=True)
 
-        # Implement the logic to save the results, possibly using the visualizer module
-        pass
+        if exp_data:
+            pd.concat(exp_data, ignore_index=True).to_csv(os.path.join(output_path, f"{participant_id}_combined_exp_data.csv"), index=False)
+        if gaze_data:
+            pd.concat(gaze_data, ignore_index=True).to_csv(os.path.join(output_path, f"{participant_id}_combined_gaze_data.csv"), index=False)
+        if rating_data:
+            pd.concat(rating_data, ignore_index=True).to_csv(os.path.join(output_path, f"{participant_id}_rating_data.csv"), index=False)
+        if integ_data:
+            pd.concat(integ_data, ignore_index=True).to_csv(os.path.join(output_path, f"{participant_id}_integ_data.csv"), index=False)
 
-    def process_files_only(self, input_folder):
-        """
-        Process each CSV file in the input_folder, extract participant_id, and save the processed file 
-        in the output_folder with a filename that includes the participant_id.
-        """
-        exposure_frames = []
-        rating_frames = []
-
-        for root, dirs, files in os.walk(input_folder):
-            for file in files:
-                if file.endswith('.csv'):
-                    file_path = os.path.join(root, file)
-                    print(f"Processing file: {file_path}")
-                    print(f"root: {root}")
-                    print(f"file: {file}")
-                    self.data_processor.input_path = root + '/'
-                    self.data_processor.filename_exp = file  # Update other filenames as needed
-
-                    # Process the data using DataProcessor
-                    data_exposure = self.data_processor.select_columns() 
-
-                    if data_exposure is not None and not data_exposure.empty:
-                        # Extract participant_id
-                        participant_id = data_exposure['participant'].iloc[3]
-                        session_id = data_exposure['session'].iloc[3]
-                        participant_id_str = str(int(participant_id))
-                        session_id_str = str(int(session_id))
-
-                        # Save the processed data
-                        output_dir = root.replace(input_folder, self.output_path)
-                        os.makedirs(output_dir, exist_ok=True)
-                        output_file_path = os.path.join(output_dir, f"{participant_id_str}_{session_id_str}_exposure.csv")
-                        data_exposure.to_csv(output_file_path, index=False)
-                        exposure_frames.append(data_exposure)
-                    
-                    data_rating = self.data_processor.extract_rating_data()
-
-                    if data_rating is not None and not data_rating.empty:
-                        output_dir = root.replace(input_folder, self.output_path)
-                        os.makedirs(output_dir, exist_ok=True)
-                        output_file_path = os.path.join(output_dir, f"{participant_id_str}_{session_id_str}_rating.csv")
-                        data_rating.to_csv(output_file_path, index=False)
-                        rating_frames.append(data_rating)
-        
-        # Concatenate and save all exposure data
-        if exposure_frames:
-            all_exposure = pd.concat(exposure_frames)
-            all_exposure['show'] = True
-            all_exposure.to_csv(os.path.join(self.output_path, 'exposure_all.csv'), index=False)
-
-        # Concatenate and save all rating data
-        if rating_frames:
-            all_rating = pd.concat(rating_frames)
-            all_rating.to_csv(os.path.join(self.output_path, 'rating_all.csv'), index=False)
-        
-        # Merge exposure and rating data
-        # df_select_exposure = all_exposure[['participant','target_image','show']]
-        # df_merged = pd.merge(all_rating, df_select_exposure, on=['participant', 'target_image'])
-        # df_merged.to_csv(os.path.join(self.output_path, 'merged_all.csv'), index=True)
-
-    def process_files_all(self, input_folder):
-        """
-        Process each CSV file in the input_folder, extract participant_id, and save the processed file 
-        in the output_folder with a filename that includes the participant_id.
-        """
-        exposure_frames = []
-        rating_frames = []
-
-        for root, dirs, files in os.walk(input_folder):
-            for file in files:
-                if file.endswith('.csv') and 'eye20' in file:
-                    file_path = os.path.join(root, file)
-                    print(f"Processing file: {file_path}")
-                    print(f"root: {root}")
-                    print(f"file: {file}")
-                    self.data_processor.input_path = root + '/'
-                    self.data_processor.filename_exp = file  # Update other filenames as needed
-
-                    # Process the data using DataProcessor
-                    data_exposure = self.data_processor.select_columns() 
-
-                    if data_exposure is not None and not data_exposure.empty:
-                        # Extract participant_id
-                        participant_id = data_exposure['participant'].iloc[3]
-                        session_id = data_exposure['session'].iloc[3]
-                        participant_id_str = str(int(participant_id))
-                        session_id_str = str(int(session_id))
-
-                        # Save the processed data
-                        output_dir = root.replace(input_folder, self.output_path)
-                        os.makedirs(output_dir, exist_ok=True)
-                        output_file_path = os.path.join(output_dir, f"{participant_id_str}_{session_id_str}_exposure.csv")
-                        data_exposure.to_csv(output_file_path, index=False)
-                        exposure_frames.append(data_exposure)
-                    
-                    data_rating = self.data_processor.extract_rating_data()
-
-                    if data_rating is not None and not data_rating.empty:
-                        output_dir = root.replace(input_folder, self.output_path)
-                        os.makedirs(output_dir, exist_ok=True)
-                        output_file_path = os.path.join(output_dir, f"{participant_id_str}_rating.csv")
-                        data_rating.to_csv(output_file_path, index=False)
-                        rating_frames.append(data_rating)
-                
-                elif file.endswith('world.mp4'):
-                    file_path = os.path.join(root, file)
-                    print(f"Processing file: {file_path}")
-                    print(f"root: {root}")
-                    print(f"file: {file}")
-                    self.data_processor.input_path = root + '/'
-                    self.data_processor.filename_video = file  # Update other filenames as needed
-
-                    # process video data 
-                    interest_areas = self.video_processor.process_video_and_detect_areas()
-                    data_aoi = pd.DataFrame(interest_areas)
-
-                    if data_aoi is not None and not data_aoi.empty:
-                        # Save the processed data
-                        output_dir = root.replace(input_folder, self.output_path)
-                        os.makedirs(output_dir, exist_ok=True)
-                        output_file_path = os.path.join(output_dir, f"{participant_id_str}_aoi.csv")
-
-                        data_aoi.to_csv(output_file_path, index=False)
-
-        # Concatenate and save all exposure data
-        if exposure_frames:
-            all_exposure = pd.concat(exposure_frames)
-            all_exposure['show'] = True
-            all_exposure.to_csv(os.path.join(self.output_path, 'exposure_all.csv'), index=False)
-
-        # Concatenate and save all rating data
-        if rating_frames:
-            all_rating = pd.concat(rating_frames)
-            all_rating.to_csv(os.path.join(self.output_path, 'rating_all.csv'), index=False)
-
-    def process_gaze_data(self, input_folder):
-        """
-        Process gaze data from a CSV file and save the processed data in the output folder.
-        """
-        for root, dirs, files in os.walk(input_folder):
-            # Initialize variables to store the loaded data for each subdirectory
-            loaded_data_exp = None
-            loaded_data_gaze = None
-
-            for file in files:
-                if file.endswith('.csv') and 'eye20' in file:
-                    file_path = os.path.join(root, file)
-                    print(f"Processing file: {file_path}")
-                    print(f"root: {root}")
-                    print(f"file: {file}")
-                    self.data_processor.input_path = root + '/'
-                    self.data_processor.filename_exp = file  # Update other filenames as needed
-
-                if file.endswith('gaze_positions.csv'):
-                    file_path = os.path.join(root, file)
-                    print(f"Processing file: {file_path}")
-                    print(f"root: {root}")
-                    print(f"file: {file}")
-                    self.data_processor.input_path = root + '/'
-                    self.data_processor.filename_gaze = file  # Update other filenames as needed
-
-                
-
-                    # Process the data using DataProcessor
-                    data_gaze = self.data_processor.process_data()
-
-                    if data_gaze is not None and not data_gaze.empty:
-                        # Save the processed data
-                        output_dir = root.replace(input_folder, self.output_path)
-                        os.makedirs(output_dir, exist_ok=True)
-
+    def build_session_config(self, participant, session):
+        return {
+            'base_path': os.path.join(participant['base_path']),
+            'output_path': participant['output_path'],
+            'exp_file': session['exp_file'],
+            'gaze_file': session['gaze_file'],
+            'video_file': session['video_file']
+        }
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config', help='Path to the config file')
-    parser.add_argument('--mode', help='Mode to run the script', default='test')
-
-    args = parser.parse_args()
-
-    # Load config here
-    with open(args.config, 'r') as f:
+    import yaml
+    with open('config_sets.yaml', 'r') as f:
         config = yaml.safe_load(f)
-    # config = load_config(args.config)
-    experiment_processor = ExperimentProcessor(config)
-
-    if args.mode == 'data_process_only':
-        experiment_processor.process_files_only(config["input_dir"])
-    elif args.mode == 'test':
-        experiment_processor.process()
-    elif args.mode == 'process_all':
-        experiment_processor.process_files_all(config["input_dir"])
-        experiment_processor.merge_data(config["output_path"])
+    processor = ExperimentProcessor(config)
+    processor.process_all_participants()
 
 if __name__ == '__main__':
     main()

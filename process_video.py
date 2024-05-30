@@ -1,11 +1,9 @@
-# test.py
-
 import os
 import cv2
 import yaml
 import pandas as pd
-from video_processor import VideoProcessor
-from data_processor import DataProcessor
+from app.video_processor import VideoProcessor
+from app.data_processor import DataProcessor
 
 def visualize_interest_areas(config):
     """
@@ -50,6 +48,18 @@ def visualize_and_record_video(processor, gaze_data, session_id, output_path):
         # Calculate elapsed time in milliseconds
         elapsed_time_ms = (frame_count / fps) * 1000
 
+        # Determine the trial number and phase based on the elapsed time
+        trial_num = int(elapsed_time_ms // 6000) + 1
+        trial_phase = (elapsed_time_ms % 6000) // 1000
+        if trial_phase == 0:
+            trial_phase_name = 'fixation'
+        elif trial_phase == 1:
+            trial_phase_name = 'arrow'
+        elif 2 <= trial_phase <= 4:
+            trial_phase_name = 'figures'
+        else:
+            trial_phase_name = 'blank'
+
         # Detect interest areas in the current frame
         interest_areas = processor.detect_interest_areas(frame, frame_count)
 
@@ -67,6 +77,23 @@ def visualize_and_record_video(processor, gaze_data, session_id, output_path):
             'interest_area_3': third_area
         }
 
+        # Overlay the detected and inferred areas on the frame
+        for area in interest_areas:
+            _, x, y, w, h = area
+            start_point = (int(x * frame.shape[1]), int(y * frame.shape[0]))
+            end_point = (int((x + w) * frame.shape[1]), int((y + h) * frame.shape[0]))
+            color = (0, 255, 0)  # Green color for rectangles
+            thickness = 2
+            cv2.rectangle(frame, start_point, end_point, color, thickness)
+
+        if third_area is not None:
+            _, x, y, w, h = third_area
+            start_point = (int(x * frame.shape[1]), int(y * frame.shape[0]))
+            end_point = (int((x + w) * frame.shape[1]), int((y + h) * frame.shape[0]))
+            color = (0, 0, 255)  # Red color for the inferred area
+            thickness = 2
+            cv2.rectangle(frame, start_point, end_point, color, thickness)
+
         # Visualize gaze data and check if gaze position is in any interest area
         in_area = False
         left_or_right = ''
@@ -74,22 +101,28 @@ def visualize_and_record_video(processor, gaze_data, session_id, output_path):
             norm_x = gaze_data.iloc[frame_count]['norm_pos_x']
             norm_y = gaze_data.iloc[frame_count]['norm_pos_y']
             gaze_point = (int(norm_x * frame.shape[1]), int((1 - norm_y) * frame.shape[0]))  # Note: norm_y is inverted
-            frame = cv2.circle(frame, gaze_point, 5, (255, 0, 0), -1)  # Blue color for gaze points
+            cv2.circle(frame, gaze_point, 5, (255, 0, 0), -1)  # Blue color for gaze points
 
             for area in interest_areas:
                 _, x, y, w, h = area
                 if x <= norm_x <= x + w and y <= norm_y <= y + h:
                     in_area = True
-                    frame = cv2.circle(frame, gaze_point, 5, (0, 255, 255), -1)  # Yellow color if within an interest area
+                    cv2.circle(frame, gaze_point, 5, (0, 255, 255), -1)  # Yellow color if within an interest area
 
             # Determine if gaze position is on the left or right side of the screen
             left_or_right = 'left' if norm_x < 0.5 else 'right'
+
+        # Overlay trial number and phase on the frame
+        text = f'Trial: {trial_num}, Phase: {trial_phase_name}'
+        cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
         # Record the data
         output_data.append({
             'session': session_id,
             'frame': frame_count,
             'elapsed_time_ms': elapsed_time_ms,
+            'trial_num': trial_num,
+            'trial_phase': trial_phase_name,
             'gaze_position': (norm_x, norm_y) if frame_count < len(gaze_data) else None,
             'area_info': area_info,
             'in_area': in_area,
@@ -109,18 +142,8 @@ def visualize_and_record_video(processor, gaze_data, session_id, output_path):
     cap.release()
     cv2.destroyAllWindows()
 
-    # Filter frames where the top 2 areas are approximately the same
-    filtered_output_data = [
-        row for row in output_data
-        if row['area_info']['interest_area_1'] and row['area_info']['interest_area_2'] and
-        not (
-            abs(row['area_info']['interest_area_1'][3] - row['area_info']['interest_area_2'][3]) < 0.01 and
-            abs(row['area_info']['interest_area_1'][4] - row['area_info']['interest_area_2'][4]) < 0.01
-        )
-    ]
-
     # Save the output data to a CSV file
-    output_df = pd.DataFrame(filtered_output_data)
+    output_df = pd.DataFrame(output_data)
     output_csv_path = os.path.join(output_path, f'session_{session_id}_output.csv')
     output_df.to_csv(output_csv_path, index=False)
 
