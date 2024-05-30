@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+-------------------------------------------------
+   @File Name:     process_video.py
+   @Author:        Yifei LI
+   @Date:          2024/05/30
+   @Description:
+-------------------------------------------------
+"""
 import os
 import cv2
 import yaml

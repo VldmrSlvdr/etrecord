@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 -------------------------------------------------
-   @File Name:     main_set.py
+   @File Name:     main.py
    @Author:        Yifei LI
    @Date:          2024/05/01
    @Description:
